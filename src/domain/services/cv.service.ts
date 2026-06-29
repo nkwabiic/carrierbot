@@ -12,11 +12,16 @@ export class CVService {
     return this.cvRepo.findByUserId(userId);
   }
 
+  async getActiveCVForUser(userId: string): Promise<CV | null> {
+    const cvs = await this.cvRepo.findByUserId(userId);
+    return cvs.length > 0 ? cvs[cvs.length - 1] : null;
+  }
+
   async getAllCVs(): Promise<CV[]> {
     return this.cvRepo.findAll();
   }
 
-  async createCV(data: Omit<CV, 'id' | 'createdAt' | 'updatedAt'>): Promise<CV> {
+  async createCV(data: Partial<CV>): Promise<CV> {
     return this.cvRepo.create(data);
   }
 

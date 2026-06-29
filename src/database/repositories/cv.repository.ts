@@ -15,7 +15,7 @@ export class CVRepository implements ICVRepository {
     return prisma.cV.findMany();
   }
 
-  async create(data: Omit<CV, 'id' | 'createdAt' | 'updatedAt'>): Promise<CV> {
+  async create(data: Partial<CV>): Promise<CV> {
     return prisma.cV.create({ data: data as Prisma.CVUncheckedCreateInput });
   }
 

@@ -16,7 +16,7 @@ export class ConversationService {
     return this.conversationRepo.findAll();
   }
 
-  async createConversation(data: Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Conversation> {
+  async createConversation(data: Partial<Conversation>): Promise<Conversation> {
     return this.conversationRepo.create(data);
   }
 

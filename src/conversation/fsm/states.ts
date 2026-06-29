@@ -14,9 +14,3 @@ export enum ConversationState {
   CV_PREVIEW = 'CV_PREVIEW',
   PDF_READY = 'PDF_READY',
 }
-
-export enum ConversationFlow {
-  ONBOARDING = 'ONBOARDING',
-  MAIN_MENU = 'MAIN_MENU',
-  CREATE_CV = 'CREATE_CV',
-}

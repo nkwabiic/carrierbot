@@ -29,4 +29,8 @@ export class UserService {
 
     return { user, conversation };
   }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    return this.userRepo.update(id, data);
+  }
 }

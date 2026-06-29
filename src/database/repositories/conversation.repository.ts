@@ -18,7 +18,7 @@ export class ConversationRepository implements IConversationRepository {
     return prisma.conversation.findMany();
   }
 
-  async create(data: Omit<Conversation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Conversation> {
+  async create(data: Partial<Conversation>): Promise<Conversation> {
     // Explicit type cast for Prisma Json fields or let Prisma handle it
     return prisma.conversation.create({ data: data as Prisma.ConversationUncheckedCreateInput });
   }

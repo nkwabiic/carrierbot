@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { User, Prisma } from '@prisma/client';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface.js';
 import { prisma } from '../prisma/prisma.js';
 
@@ -15,8 +15,8 @@ export class UserRepository implements IUserRepository {
     return prisma.user.findMany();
   }
 
-  async create(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    return prisma.user.create({ data });
+  async create(data: Partial<User>): Promise<User> {
+    return prisma.user.create({ data: data as Prisma.UserUncheckedCreateInput });
   }
 
   async update(id: string, data: Partial<User>): Promise<User> {

@@ -2,8 +2,6 @@ import { IWhatsAppProvider } from './whatsapp.interface.js';
 import { logger } from '../utils/logger.js';
 
 export class WhatsAppCloudProvider implements IWhatsAppProvider {
-  private apiUrl = 'https://graph.facebook.com/v17.0'; // Example version
-
   async sendMessage(to: string, message: string): Promise<boolean> {
     try {
       // In production, use fetch/axios to hit the actual WhatsApp API
