@@ -9,6 +9,8 @@ import { FiniteStateMachine } from '../conversation/fsm/fsm.js';
 import { WhatsAppCloudProvider } from '../whatsapp/provider.js';
 import { GeminiService } from '../ai/gemini.service.js';
 import { PDFService } from '../pdf/pdf.service.js';
+import { LocalStorageProvider } from '../pdf/storage/local-storage.provider.js';
+import { IPdfStorageProvider } from '../pdf/storage/pdf-storage.interface.js';
 
 class Container {
   public userRepository: UserRepository;
@@ -21,6 +23,7 @@ class Container {
 
   public whatsappProvider: WhatsAppCloudProvider;
   public geminiService: GeminiService;
+  public pdfStorageProvider: IPdfStorageProvider;
   public pdfService: PDFService;
   public fsm: FiniteStateMachine;
   public webhookService: WebhookService;
@@ -36,7 +39,10 @@ class Container {
     this.conversationService = new ConversationService(this.conversationRepository);
     this.cvService = new CVService(this.cvRepository);
     this.geminiService = new GeminiService();
-    this.pdfService = new PDFService();
+    
+    // PDF & Storage
+    this.pdfStorageProvider = new LocalStorageProvider();
+    this.pdfService = new PDFService(this.pdfStorageProvider);
 
     // Provider & FSM
     this.whatsappProvider = new WhatsAppCloudProvider();
@@ -48,3 +54,4 @@ class Container {
 }
 
 export const container = new Container();
+

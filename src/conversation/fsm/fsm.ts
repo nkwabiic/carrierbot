@@ -7,7 +7,7 @@ import { CVService } from '../../domain/services/cv.service.js';
 import { GeminiService } from '../../ai/gemini.service.js';
 import { PDFService } from '../../pdf/pdf.service.js';
 import { logger } from '../../utils/logger.js';
-import { config } from '../../app/config/env.js';
+import { escapeHtml } from '../../utils/escape.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -258,16 +258,16 @@ ${updatedCv.references}
       let html = fs.readFileSync(templatePath, 'utf-8');
 
       // Simple templating
-      html = html.replace('{{fullName}}', user.fullName || '');
-      html = html.replace('{{email}}', user.email || '');
-      html = html.replace('{{phone}}', user.phone || '');
-      html = html.replace('{{jobTitle}}', cv.jobTitle || '');
-      html = html.replace('{{professionalSummary}}', cv.professionalSummary || '');
-      html = html.replace('{{experience}}', (cv.experience as string) || '');
-      html = html.replace('{{education}}', (cv.education as string) || '');
-      html = html.replace('{{skills}}', (cv.skills as string) || '');
-      html = html.replace('{{languages}}', (cv.languages as string) || '');
-      html = html.replace('{{references}}', (cv.references as string) || '');
+      html = html.replace('{{fullName}}', escapeHtml(user.fullName));
+      html = html.replace('{{email}}', escapeHtml(user.email));
+      html = html.replace('{{phone}}', escapeHtml(user.phone));
+      html = html.replace('{{jobTitle}}', escapeHtml(cv.jobTitle));
+      html = html.replace('{{professionalSummary}}', escapeHtml(cv.professionalSummary));
+      html = html.replace('{{experience}}', escapeHtml(cv.experience as string));
+      html = html.replace('{{education}}', escapeHtml(cv.education as string));
+      html = html.replace('{{skills}}', escapeHtml(cv.skills as string));
+      html = html.replace('{{languages}}', escapeHtml(cv.languages as string));
+      html = html.replace('{{references}}', escapeHtml(cv.references as string));
       
       // Handle optional sections correctly (crude fallback for conditionals)
       html = html.replace(/{{#if.*?}}/g, '');
@@ -278,7 +278,7 @@ ${updatedCv.references}
 
       if (pdfPath) {
         await this.cvService.savePdfPath(cv.id, pdfPath);
-        const downloadLink = `${config.APP_URL}/assets/pdfs/${fileName}`;
+        const downloadLink = pdfPath; // the provider now returns the URL
         await this.provider.sendMessage(user.phone, `CV yako ipo tayari! Unaweza kuipakua hapa: ${downloadLink}`);
       } else {
         await this.provider.sendMessage(user.phone, 'Samahani, kumetokea hitilafu wakati wa kutengeneza PDF. Tafadhali jaribu tena.');

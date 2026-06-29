@@ -1,44 +1,50 @@
 import puppeteer from 'puppeteer';
-import path from 'path';
-import fs from 'fs';
 import { logger } from '../utils/logger.js';
-import { config } from '../app/config/env.js';
+import { IPdfStorageProvider } from './storage/pdf-storage.interface.js';
 
 export class PDFService {
+  constructor(private storageProvider: IPdfStorageProvider) {}
+
   async generatePDF(htmlContent: string, fileName: string): Promise<string | null> {
     const startTime = Date.now();
+    let browser;
     try {
-      // Ensure the output directory exists
-      const outputDir = path.resolve(config.PDF_OUTPUT_PATH);
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
+      const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      };
+
+      if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        puppeteerOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
       }
 
-      const filePath = path.join(outputDir, fileName);
-
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
+      browser = await puppeteer.launch(puppeteerOptions);
 
       const page = await browser.newPage();
       await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
-      await page.pdf({
-        path: filePath,
+      
+      const pdfBuffer = await page.pdf({
         format: 'A4',
         printBackground: true,
       });
 
       await browser.close();
+      browser = undefined;
+
+      const pdfUrl = await this.storageProvider.savePdf(fileName, Buffer.from(pdfBuffer));
 
       const latency = Date.now() - startTime;
       logger.info(`[PDF] Generated PDF ${fileName} in ${latency}ms`);
 
-      return filePath;
+      return pdfUrl;
     } catch (error) {
+      if (browser) {
+        await browser.close().catch(() => {});
+      }
       const latency = Date.now() - startTime;
       logger.error(`[PDF] Error generating PDF after ${latency}ms: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return null;
     }
   }
 }
+
