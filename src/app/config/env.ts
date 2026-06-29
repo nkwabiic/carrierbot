@@ -9,6 +9,10 @@ const envSchema = z.object({
   WHATSAPP_WEBHOOK_VERIFY_TOKEN: z.string(),
   WHATSAPP_API_TOKEN: z.string(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  GEMINI_API_KEY: z.string(),
+  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  PDF_OUTPUT_PATH: z.string().default('./assets/pdfs'),
+  APP_URL: z.string().default('http://localhost:3000'),
 });
 
 const envVars = envSchema.safeParse(process.env);

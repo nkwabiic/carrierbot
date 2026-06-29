@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
 import { config } from './app/config/env.js';
 import { logger } from './utils/logger.js';
 import { loggerMiddleware } from './app/middleware/logger.middleware.js';
@@ -11,10 +12,15 @@ import routes from './app/routes/index.js';
 const app = express();
 
 // Security and utility middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static assets (PDFs)
+app.use('/assets', express.static(path.join(process.cwd(), 'assets')));
 
 // Custom middlewares
 app.use(loggerMiddleware);

@@ -11,6 +11,27 @@ export class CVRepository implements ICVRepository {
     return prisma.cV.findMany({ where: { userId } });
   }
 
+  async findLatestCV(userId: string): Promise<CV | null> {
+    return prisma.cV.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async savePdfPath(id: string, path: string): Promise<CV> {
+    return prisma.cV.update({
+      where: { id },
+      data: { pdfUrl: path },
+    });
+  }
+
+  async updateEnhancedContent(id: string, data: { professionalSummary?: string; experience?: string; skills?: string }): Promise<CV> {
+    return prisma.cV.update({
+      where: { id },
+      data,
+    });
+  }
+
   async findAll(): Promise<CV[]> {
     return prisma.cV.findMany();
   }

@@ -7,6 +7,8 @@ import { CVService } from '../domain/services/cv.service.js';
 import { WebhookService } from '../domain/services/webhook.service.js';
 import { FiniteStateMachine } from '../conversation/fsm/fsm.js';
 import { WhatsAppCloudProvider } from '../whatsapp/provider.js';
+import { GeminiService } from '../ai/gemini.service.js';
+import { PDFService } from '../pdf/pdf.service.js';
 
 class Container {
   public userRepository: UserRepository;
@@ -18,6 +20,8 @@ class Container {
   public cvService: CVService;
 
   public whatsappProvider: WhatsAppCloudProvider;
+  public geminiService: GeminiService;
+  public pdfService: PDFService;
   public fsm: FiniteStateMachine;
   public webhookService: WebhookService;
 
@@ -31,10 +35,12 @@ class Container {
     this.userService = new UserService(this.userRepository, this.conversationRepository);
     this.conversationService = new ConversationService(this.conversationRepository);
     this.cvService = new CVService(this.cvRepository);
+    this.geminiService = new GeminiService();
+    this.pdfService = new PDFService();
 
     // Provider & FSM
     this.whatsappProvider = new WhatsAppCloudProvider();
-    this.fsm = new FiniteStateMachine(this.whatsappProvider, this.conversationService, this.userService, this.cvService);
+    this.fsm = new FiniteStateMachine(this.whatsappProvider, this.conversationService, this.userService, this.cvService, this.geminiService, this.pdfService);
 
     // Webhook Service
     this.webhookService = new WebhookService(this.userService, this.fsm);

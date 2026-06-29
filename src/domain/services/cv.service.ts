@@ -13,8 +13,15 @@ export class CVService {
   }
 
   async getActiveCVForUser(userId: string): Promise<CV | null> {
-    const cvs = await this.cvRepo.findByUserId(userId);
-    return cvs.length > 0 ? cvs[cvs.length - 1] : null;
+    return this.cvRepo.findLatestCV(userId);
+  }
+
+  async savePdfPath(id: string, path: string): Promise<CV> {
+    return this.cvRepo.savePdfPath(id, path);
+  }
+
+  async updateEnhancedContent(id: string, data: { professionalSummary?: string; experience?: string; skills?: string }): Promise<CV> {
+    return this.cvRepo.updateEnhancedContent(id, data);
   }
 
   async getAllCVs(): Promise<CV[]> {
