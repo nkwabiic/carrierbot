@@ -1,6 +1,6 @@
 import { Conversation } from '@prisma/client';
 import { IRepository } from '../interfaces/repository.interface.js';
-import { prisma } from '../database/prisma.js';
+import { prisma } from '../../database/prisma.js';
 
 export class ConversationRepository implements IRepository<Conversation> {
   async findById(id: string): Promise<Conversation | null> {

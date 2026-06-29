@@ -1,6 +1,6 @@
-import { IWhatsAppProvider } from '../interfaces/whatsapp.interface.js';
-import { config } from '../config/env.js';
-import { logger } from '../utils/logger.js';
+import { IWhatsAppProvider } from '../../../interfaces/whatsapp.interface.js';
+import { config } from '../../../config/env.js';
+import { logger } from '../../utils/logger.js';
 
 export class WhatsAppCloudProvider implements IWhatsAppProvider {
   private apiUrl = 'https://graph.facebook.com/v17.0'; // Example version

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { config } from './config/env.js';
-import { logger } from './utils/logger.js';
+import { logger } from './routes/utils/logger.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { rateLimiter } from './middleware/rate-limiter.middleware.js';

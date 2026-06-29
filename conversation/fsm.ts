@@ -1,8 +1,8 @@
 import { ConversationState, ConversationFlow } from './states.js';
 import { User, Conversation } from '@prisma/client';
-import { IWhatsAppProvider } from '../interfaces/whatsapp.interface.js';
-import { ConversationRepository } from '../repositories/conversation.repository.js';
-import { logger } from '../utils/logger.js';
+import { IWhatsAppProvider } from '../src/interfaces/whatsapp.interface.js';
+import { ConversationRepository } from '../src/repositories/conversation.repository.js';
+import { logger } from '../src/routes/utils/logger.js';
 
 export class FiniteStateMachine {
   constructor(
@@ -15,7 +15,6 @@ export class FiniteStateMachine {
     
     // Simple state machine logic
     let nextState = conversation.currentState;
-    let nextFlow = conversation.currentFlow;
     
     switch (conversation.currentState) {
       case ConversationState.WELCOME:
@@ -35,14 +34,12 @@ export class FiniteStateMachine {
           ['1️⃣ Tengeneza CV Mpya', '2️⃣ Rekebisha CV', '3️⃣ My Account', '4️⃣ Help']
         );
         nextState = ConversationState.HOME;
-        nextFlow = ConversationFlow.MAIN_MENU;
         break;
 
       case ConversationState.HOME:
         if (message.includes('1') || message.toLowerCase().includes('cv mpya')) {
           await this.provider.sendMessage(user.phone, 'Sawa, tuanze kutengeneza CV. Je, unatafuta kazi gani? (Mfano: Mhasibu, Mwalimu)');
           nextState = ConversationState.CV_JOB_TITLE;
-          nextFlow = ConversationFlow.CREATE_CV;
         } else {
           await this.provider.sendMessage(user.phone, 'Samahani, huduma hii bado inatengenezwa. Tafadhali chagua "1️⃣ Tengeneza CV Mpya".');
         }
@@ -51,6 +48,36 @@ export class FiniteStateMachine {
       case ConversationState.CV_JOB_TITLE:
         await this.provider.sendMessage(user.phone, 'Andika maelezo mafupi (Professional Summary) kukuhusu.');
         nextState = ConversationState.CV_SUMMARY;
+        break;
+
+      case ConversationState.CV_SUMMARY:
+        await this.provider.sendMessage(user.phone, 'Tafadhali orodhesha elimu yako.');
+        nextState = ConversationState.CV_EDUCATION;
+        break;
+
+      case ConversationState.CV_EDUCATION:
+        await this.provider.sendMessage(user.phone, 'Tafadhali orodhesha uzoefu wako wa kazi.');
+        nextState = ConversationState.CV_EXPERIENCE;
+        break;
+
+      case ConversationState.CV_EXPERIENCE:
+        await this.provider.sendMessage(user.phone, 'Tafadhali orodhesha ujuzi (skills) wako.');
+        nextState = ConversationState.CV_SKILLS;
+        break;
+
+      case ConversationState.CV_SKILLS:
+        await this.provider.sendMessage(user.phone, 'Tafadhali orodhesha lugha unazozungumza.');
+        nextState = ConversationState.CV_LANGUAGES;
+        break;
+
+      case ConversationState.CV_LANGUAGES:
+        await this.provider.sendMessage(user.phone, 'Tafadhali weka wadhamini (references) wako.');
+        nextState = ConversationState.CV_REFERENCES;
+        break;
+
+      case ConversationState.CV_REFERENCES:
+        await this.provider.sendMessage(user.phone, 'Asante! Tunatengeneza CV yako sasa...');
+        nextState = ConversationState.AI_PROCESSING;
         break;
 
       // Add other states logically...
@@ -62,8 +89,7 @@ export class FiniteStateMachine {
 
     await this.convRepo.update(conversation.id, {
       currentState: nextState,
-      currentFlow: nextFlow,
-      lastInteraction: new Date(),
+      lastMessage: message,
     });
   }
 }

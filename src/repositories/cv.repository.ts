@@ -1,6 +1,6 @@
 import { CV } from '@prisma/client';
 import { IRepository } from '../interfaces/repository.interface.js';
-import { prisma } from '../database/prisma.js';
+import { prisma } from '../../database/prisma.js';
 
 export class CVRepository implements IRepository<CV> {
   async findById(id: string): Promise<CV | null> {

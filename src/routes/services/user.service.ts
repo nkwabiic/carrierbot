@@ -1,6 +1,6 @@
-import { UserRepository } from '../repositories/user.repository.js';
-import { ConversationRepository } from '../repositories/conversation.repository.js';
-import { ConversationState, ConversationFlow } from '../conversation/states.js';
+import { UserRepository } from '../../repositories/user.repository.js';
+import { ConversationRepository } from '../../repositories/conversation.repository.js';
+import { ConversationState, ConversationFlow } from '../../../conversation/states.js';
 import { User, Conversation } from '@prisma/client';
 
 export class UserService {
@@ -13,7 +13,7 @@ export class UserService {
     let user = await this.userRepo.findByPhone(phone);
     
     if (!user) {
-      user = await this.userRepo.create({ phone, name: name || null, email: null, language: 'sw', isBlocked: false });
+      user = await this.userRepo.create({ phone, fullName: name || null, email: null });
     }
 
     let conversation = await this.convRepo.findByUserId(user.id);
@@ -22,10 +22,8 @@ export class UserService {
       conversation = await this.convRepo.create({
         userId: user.id,
         currentState: ConversationState.WELCOME,
-        currentFlow: ConversationFlow.ONBOARDING,
-        sessionData: {},
-        retryCount: 0,
-        lastInteraction: new Date(),
+        lastMessage: null,
+        metadata: {},
       });
     }
 

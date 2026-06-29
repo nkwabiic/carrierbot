@@ -10,10 +10,8 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   phone     String   @unique
-  name      String?
+  fullName  String?
   email     String?
-  language  String   @default("sw")
-  isBlocked Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -22,15 +20,13 @@ model User {
 }
 
 model Conversation {
-  id              String   @id @default(uuid())
-  userId          String
-  currentFlow     String
-  currentState    String
-  sessionData     Json     @default("{}")
-  retryCount      Int      @default(0)
-  lastInteraction DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String   @id @default(uuid())
+  userId       String
+  currentState String
+  lastMessage  String?
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -40,21 +36,14 @@ model CV {
   userId              String
   jobTitle            String?
   professionalSummary String?
-  education           Json     @default("[]")
-  experience          Json     @default("[]")
-  skills              Json     @default("[]")
-  languages           Json     @default("[]")
-  references          Json     @default("[]")
-  pdfPath             String?
+  education           Json?
+  experience          Json?
+  skills              Json?
+  languages           Json?
+  references          Json?
+  pdfUrl              String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  action    String
-  metadata  Json     @default("{}")
-  timestamp DateTime @default(now())
 }

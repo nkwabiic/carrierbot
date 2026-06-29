@@ -1,6 +1,6 @@
-import { WebhookPayload } from '../interfaces/whatsapp.interface.js';
+import { WebhookPayload } from '../../interfaces/whatsapp.interface.js';
 import { UserService } from './user.service.js';
-import { FiniteStateMachine } from '../conversation/fsm.js';
+import { FiniteStateMachine } from '../../../conversation/fsm.js';
 import { logger } from '../utils/logger.js';
 
 export class WebhookService {
