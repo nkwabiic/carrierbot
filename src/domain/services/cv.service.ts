@@ -1,8 +1,8 @@
-import { CVRepository } from '../../repositories/cv.repository.js';
+import { ICVRepository } from '../../domain/repositories/cv.repository.interface.js';
 import { CV } from '@prisma/client';
 
 export class CVService {
-  constructor(private readonly cvRepo: CVRepository) {}
+  constructor(private readonly cvRepo: ICVRepository) {}
 
   async getCVById(id: string): Promise<CV | null> {
     return this.cvRepo.findById(id);

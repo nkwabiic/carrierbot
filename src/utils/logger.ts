@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { config } from '../../config/env.js';
+import { config } from '../app/config/env.js';
 
 const formats = [
   winston.format.timestamp(),

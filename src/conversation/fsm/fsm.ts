@@ -1,13 +1,13 @@
-import { ConversationState, ConversationFlow } from './states.js';
+import { ConversationState } from './states.js';
 import { User, Conversation } from '@prisma/client';
-import { IWhatsAppProvider } from '../src/interfaces/whatsapp.interface.js';
-import { ConversationRepository } from '../src/repositories/conversation.repository.js';
-import { logger } from '../src/routes/utils/logger.js';
+import { IWhatsAppProvider } from '../../whatsapp/whatsapp.interface.js';
+import { IConversationRepository } from '../../domain/repositories/conversation.repository.interface.js';
+import { logger } from '../../utils/logger.js';
 
 export class FiniteStateMachine {
   constructor(
     private provider: IWhatsAppProvider,
-    private convRepo: ConversationRepository
+    private convRepo: IConversationRepository
   ) {}
 
   async processMessage(user: User, conversation: Conversation, message: string) {

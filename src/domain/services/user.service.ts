@@ -1,12 +1,12 @@
-import { UserRepository } from '../../repositories/user.repository.js';
-import { ConversationRepository } from '../../repositories/conversation.repository.js';
-import { ConversationState, ConversationFlow } from '../../../conversation/states.js';
+import { IUserRepository } from '../../domain/repositories/user.repository.interface.js';
+import { IConversationRepository } from '../../domain/repositories/conversation.repository.interface.js';
+import { ConversationState } from '../../conversation/fsm/states.js';
 import { User, Conversation } from '@prisma/client';
 
 export class UserService {
   constructor(
-    private userRepo: UserRepository,
-    private convRepo: ConversationRepository
+    private userRepo: IUserRepository,
+    private convRepo: IConversationRepository
   ) {}
 
   async getOrCreateUser(phone: string, name?: string): Promise<{ user: User; conversation: Conversation }> {

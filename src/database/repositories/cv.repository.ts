@@ -1,8 +1,8 @@
-import { CV } from '@prisma/client';
-import { IRepository } from '../interfaces/repository.interface.js';
-import { prisma } from '../../database/prisma.js';
+import { CV, Prisma } from '@prisma/client';
+import { ICVRepository } from '../../domain/repositories/cv.repository.interface.js';
+import { prisma } from '../prisma/prisma.js';
 
-export class CVRepository implements IRepository<CV> {
+export class CVRepository implements ICVRepository {
   async findById(id: string): Promise<CV | null> {
     return prisma.cV.findUnique({ where: { id } });
   }
@@ -16,13 +16,13 @@ export class CVRepository implements IRepository<CV> {
   }
 
   async create(data: Omit<CV, 'id' | 'createdAt' | 'updatedAt'>): Promise<CV> {
-    return prisma.cV.create({ data: data as any });
+    return prisma.cV.create({ data: data as Prisma.CVUncheckedCreateInput });
   }
 
   async update(id: string, data: Partial<CV>): Promise<CV> {
     return prisma.cV.update({
       where: { id },
-      data: data as any,
+      data: data as Prisma.CVUncheckedUpdateInput,
     });
   }
 

@@ -1,8 +1,8 @@
-import { ConversationRepository } from '../../repositories/conversation.repository.js';
+import { IConversationRepository } from '../../domain/repositories/conversation.repository.interface.js';
 import { Conversation } from '@prisma/client';
 
 export class ConversationService {
-  constructor(private readonly conversationRepo: ConversationRepository) {}
+  constructor(private readonly conversationRepo: IConversationRepository) {}
 
   async getConversationById(id: string): Promise<Conversation | null> {
     return this.conversationRepo.findById(id);

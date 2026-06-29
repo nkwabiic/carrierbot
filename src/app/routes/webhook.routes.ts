@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { WebhookController } from '../controllers/webhook.controller.js';
-import { WebhookService } from './services/webhook.service.js';
-import { UserService } from './services/user.service.js';
-import { UserRepository } from '../repositories/user.repository.js';
-import { ConversationRepository } from '../repositories/conversation.repository.js';
-import { FiniteStateMachine } from '../../conversation/fsm.js';
-import { WhatsAppCloudProvider } from './services/whatsapp/provider.js';
+import { WebhookService } from '../../domain/services/webhook.service.js';
+import { UserService } from '../../domain/services/user.service.js';
+import { UserRepository } from '../../database/repositories/user.repository.js';
+import { ConversationRepository } from '../../database/repositories/conversation.repository.js';
+import { FiniteStateMachine } from '../../conversation/fsm/fsm.js';
+import { WhatsAppCloudProvider } from '../../whatsapp/provider.js';
 import { validate } from '../middleware/validation.middleware.js';
-import { webhookPayloadSchema } from '../validators/webhook.validator.js';
+import { webhookPayloadSchema } from '../../validators/webhook.validator.js';
 
 // Dependency Injection Setup
 const userRepo = new UserRepository();

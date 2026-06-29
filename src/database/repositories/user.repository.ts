@@ -1,8 +1,8 @@
 import { User } from '@prisma/client';
-import { IRepository } from '../interfaces/repository.interface.js';
-import { prisma } from '../../database/prisma.js';
+import { IUserRepository } from '../../domain/repositories/user.repository.interface.js';
+import { prisma } from '../prisma/prisma.js';
 
-export class UserRepository implements IRepository<User> {
+export class UserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
   }

@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { WebhookService } from '../routes/services/webhook.service.js';
+import { WebhookService } from '../../domain/services/webhook.service.js';
 import { config } from '../config/env.js';
-import { logger } from '../routes/utils/logger.js';
-import { WebhookPayload } from '../interfaces/whatsapp.interface.js';
+import { logger } from '../../utils/logger.js';
+import { WebhookPayload } from '../../whatsapp/whatsapp.interface.js';
 
 export class WebhookController {
   constructor(private webhookService: WebhookService) {}
