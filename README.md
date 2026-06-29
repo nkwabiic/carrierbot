@@ -1,11 +1,22 @@
-<div align="center">
+# careerbot-tanzania
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+AI WhatsApp Career Assistant - Version 0.1
 
-  <h1>Built with AI Studio</h2>
+## Sprint A (Foundation)
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+This is the production backend foundation.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Tech Stack
+- Node.js 22 LTS
+- TypeScript
+- Express.js
+- PostgreSQL
+- Prisma ORM
+- Zod
 
-</div>
+## Setup
+
+1. Copy `.env.example` to `.env` and fill the variables.
+2. Run `npm install`
+3. Run `npx prisma generate`
+4. Run `npm run dev`
