@@ -1,30 +1,82 @@
 import { IWhatsAppProvider } from './whatsapp.interface.js';
 import { logger } from '../utils/logger.js';
-import { makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers, WASocket } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import * as qrcode from 'qrcode-terminal';
 import { Boom } from '@hapi/boom';
 
+interface MessageCacheEntry {
+  id: string;
+  timestamp: number;
+}
+
 export class BaileysProvider implements IWhatsAppProvider {
-  private sock: any;
+  private sock: WASocket | null = null;
   private messageHandler?: (from: string, text: string) => Promise<void>;
+  
+  private isInitializing = false;
+  private reconnectAttempt = 0;
+  private readonly MAX_RECONNECT_DELAY_MS = 30000;
+
+  // Duplicate message protection cache
+  private processedMessages: MessageCacheEntry[] = [];
+  private readonly CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    this.init();
+    this.init().catch(err => logger.error('[Baileys] Constructor init failed', err));
   }
 
   public setMessageHandler(handler: (from: string, text: string) => Promise<void>) {
     this.messageHandler = handler;
   }
 
+  private cleanMessageCache() {
+    const now = Date.now();
+    this.processedMessages = this.processedMessages.filter(
+      entry => now - entry.timestamp < this.CACHE_EXPIRY_MS
+    );
+  }
+
+  private isDuplicateMessage(messageId: string | null | undefined): boolean {
+    if (!messageId) return false;
+    
+    this.cleanMessageCache();
+    
+    if (this.processedMessages.some(entry => entry.id === messageId)) {
+      return true;
+    }
+    
+    this.processedMessages.push({ id: messageId, timestamp: Date.now() });
+    return false;
+  }
+
   private async init() {
+    if (this.isInitializing) {
+      logger.warn('[Baileys] Initialization already in progress, skipping.');
+      return;
+    }
+
+    this.isInitializing = true;
+
     try {
+      if (this.sock) {
+        logger.info('[Baileys] Closing existing socket before reconnecting...');
+        this.sock.ev.removeAllListeners('connection.update');
+        this.sock.ev.removeAllListeners('creds.update');
+        this.sock.ev.removeAllListeners('messages.upsert');
+        this.sock.end(undefined);
+        this.sock = null;
+      }
+
       const { state, saveCreds } = await useMultiFileAuthState('./baileys_auth_info');
+
+      const sockLogger = pino({ level: 'silent' });
 
       const sock = makeWASocket({
         auth: state,
         printQRInTerminal: false,
-        logger: pino({ level: 'silent' }) as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        logger: sockLogger as any,
         browser: Browsers.macOS('Desktop'),
       });
 
@@ -45,20 +97,50 @@ export class BaileysProvider implements IWhatsAppProvider {
           logger.warn(`[Baileys] Connection closed due to ${lastDisconnect?.error}. Reconnecting: ${shouldReconnect}`);
           
           if (shouldReconnect) {
-            setTimeout(() => this.init(), 2000);
+            this.reconnectAttempt++;
+            // Exponential backoff: 2s, 4s, 8s, up to 30s
+            const delay = Math.min(Math.pow(2, this.reconnectAttempt) * 1000, this.MAX_RECONNECT_DELAY_MS);
+            logger.info(`[Baileys] Scheduling reconnect attempt ${this.reconnectAttempt} in ${delay}ms`);
+            setTimeout(() => {
+              this.init().catch(err => logger.error('[Baileys] Reconnect failed', err));
+            }, delay);
           } else {
             logger.error('[Baileys] Logged out from WhatsApp');
           }
         } else if (connection === 'open') {
           logger.info('[Baileys] Connected to WhatsApp!');
+          this.reconnectAttempt = 0; // Reset retry counter on successful connection
         }
       });
 
       sock.ev.on('messages.upsert', async (m) => {
         if (m.type === 'notify') {
           for (const msg of m.messages) {
-            if (!msg.key.fromMe && msg.message) {
-              const from = msg.key.remoteJid?.split('@')[0];
+            // Ignore self messages
+            if (msg.key.fromMe) continue;
+            
+            const remoteJid = msg.key.remoteJid;
+            if (!remoteJid) continue;
+            
+            // Ignore unsupported message sources
+            if (
+              remoteJid === 'status@broadcast' || 
+              remoteJid.endsWith('@g.us') || 
+              remoteJid.endsWith('@broadcast') ||
+              remoteJid.endsWith('@newsletter')
+            ) {
+              logger.debug(`[Baileys] Ignored message from unsupported source: ${remoteJid}`);
+              continue;
+            }
+
+            const messageId = msg.key.id;
+            if (this.isDuplicateMessage(messageId)) {
+              logger.warn(`[Baileys] Ignored duplicate message ID: ${messageId}`);
+              continue;
+            }
+
+            if (msg.message) {
+              const from = remoteJid.split('@')[0];
               if (!from) continue;
 
               let text = '';
@@ -81,6 +163,8 @@ export class BaileysProvider implements IWhatsAppProvider {
                 } catch (error) {
                   logger.error(`[Baileys] Error in message handler`, error);
                 }
+              } else if (!text) {
+                logger.debug(`[Baileys] Ignored empty message or unsupported type from ${from}`);
               }
             }
           }
@@ -89,7 +173,14 @@ export class BaileysProvider implements IWhatsAppProvider {
 
     } catch (error) {
       logger.error('[Baileys] Failed to initialize', error);
-      setTimeout(() => this.init(), 5000);
+      this.reconnectAttempt++;
+      const delay = Math.min(Math.pow(2, this.reconnectAttempt) * 1000, this.MAX_RECONNECT_DELAY_MS);
+      logger.info(`[Baileys] Scheduling reconnect attempt ${this.reconnectAttempt} in ${delay}ms`);
+      setTimeout(() => {
+        this.init().catch(err => logger.error('[Baileys] Reconnect failed', err));
+      }, delay);
+    } finally {
+      this.isInitializing = false;
     }
   }
 
@@ -101,14 +192,26 @@ export class BaileysProvider implements IWhatsAppProvider {
       const pdfLinkMatch = message.match(/Unaweza kuipakua hapa:\s+(http\S+\.pdf)/);
       if (pdfLinkMatch) {
         const pdfUrl = pdfLinkMatch[1];
-        await this.sock.sendMessage(jid, {
-          document: { url: pdfUrl },
-          mimetype: 'application/pdf',
-          fileName: 'CV.pdf',
-          caption: message
-        });
-        logger.info(`[Baileys] Sent document to ${to}`);
-        return true;
+        
+        try {
+          // Validate URL format
+          new URL(pdfUrl);
+          
+          await this.sock.sendMessage(jid, {
+            document: { url: pdfUrl },
+            mimetype: 'application/pdf',
+            fileName: 'CV.pdf',
+            caption: message
+          });
+          logger.info(`[Baileys] Sent document to ${to}`);
+          return true;
+        } catch (docError) {
+          logger.error(`[Baileys] Failed to send document to ${to}, falling back to text. URL: ${pdfUrl}`, docError);
+          // Fallback to text message if doc upload fails or URL is invalid
+          await this.sock.sendMessage(jid, { text: message });
+          logger.info(`[Baileys] Sent fallback text message to ${to}`);
+          return true;
+        }
       }
 
       await this.sock.sendMessage(jid, { text: message });
@@ -144,6 +247,14 @@ export class BaileysProvider implements IWhatsAppProvider {
     try {
       if (!this.sock) return false;
       const jid = `${to}@s.whatsapp.net`;
+      
+      try {
+        new URL(documentUrlOrPath);
+      } catch (err) {
+        logger.error(`[Baileys] Invalid document URL: ${documentUrlOrPath}`, err);
+        return false; // Skip sending if URL is completely invalid here
+      }
+
       await this.sock.sendMessage(jid, {
         document: { url: documentUrlOrPath },
         mimetype: 'application/pdf',
