@@ -2,7 +2,8 @@ import { IWhatsAppProvider } from './whatsapp.interface.js';
 import { logger } from '../utils/logger.js';
 import { makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers, WASocket } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import * as qrcode from 'qrcode-terminal';
+import qrcode from 'qrcode-terminal';
+console.log('QR IMPORT:', qrcode);
 import { Boom } from '@hapi/boom';
 
 interface MessageCacheEntry {
@@ -77,7 +78,7 @@ export class BaileysProvider implements IWhatsAppProvider {
         printQRInTerminal: false,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         logger: sockLogger as any,
-        browser: Browsers.macOS('Desktop'),
+        browser: Browsers.ubuntu('Chrome'),
       });
 
       this.sock = sock;
@@ -140,7 +141,13 @@ export class BaileysProvider implements IWhatsAppProvider {
             }
 
             if (msg.message) {
-              const from = remoteJid.split('@')[0];
+              // Prefer the real phone number returned by Baileys.
+              const senderJid =
+                (msg.key as any).remoteJidAlt ??
+                msg.key.remoteJid;
+
+              const from = senderJid?.split("@")[0];
+
               if (!from) continue;
 
               let text = '';
@@ -157,11 +164,28 @@ export class BaileysProvider implements IWhatsAppProvider {
               }
 
               if (text && this.messageHandler) {
-                logger.info(`[Baileys] Received message from ${from}: ${text}`);
+                console.log("\n========== RAW BAILEYS MESSAGE ==========");
+                console.dir(msg, { depth: null });
+
+                console.log("\n========== JID DEBUG ==========");
+                console.log({
+                    remoteJid: msg.key.remoteJid,
+                    remoteJidAlt: (msg.key as any).remoteJidAlt,
+                    participant: msg.key.participant,
+                    participantAlt: (msg.key as any).participantAlt,
+                    addressingMode: (msg.key as any).addressingMode,
+                    pushName: msg.pushName,
+                });
+                console.log("===============================\n");
+
+                logger.info(
+                  `[Baileys] Received message from ${from} (jid=${msg.key.remoteJid}): ${text}`
+                );
+
                 try {
-                  await this.messageHandler(from, text);
+                    await this.messageHandler(from, text);
                 } catch (error) {
-                  logger.error(`[Baileys] Error in message handler`, error);
+                    logger.error(`[Baileys] Error in message handler`, error);
                 }
               } else if (!text) {
                 logger.debug(`[Baileys] Ignored empty message or unsupported type from ${from}`);
