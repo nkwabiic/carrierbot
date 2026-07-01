@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CV</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 24pt;
+            margin-bottom: 5px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .contact-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        .contact-info span {
+            margin: 0 10px;
+        }
+        h2 {
+            font-size: 14pt;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .section-content {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{fullName}}</h1>
+    <div class="contact-info">
+        <span>Email: {{email}}</span>
+        <span>Phone: {{phone}}</span>
+    </div>
+
+    {{#if jobTitle}}
+    <h2>Target Role</h2>
+    <div class="section-content">{{jobTitle}}</div>
+    {{/if}}
+
+    {{#if professionalSummary}}
+    <h2>Professional Summary</h2>
+    <div class="section-content">{{professionalSummary}}</div>
+    {{/if}}
+
+    {{#if experience}}
+    <h2>Experience</h2>
+    <div class="section-content">{{experience}}</div>
+    {{/if}}
+
+    {{#if education}}
+    <h2>Education</h2>
+    <div class="section-content">{{education}}</div>
+    {{/if}}
+
+    {{#if skills}}
+    <h2>Skills</h2>
+    <div class="section-content">{{skills}}</div>
+    {{/if}}
+
+    {{#if languages}}
+    <h2>Languages</h2>
+    <div class="section-content">{{languages}}</div>
+    {{/if}}
+
+    {{#if references}}
+    <h2>References</h2>
+    <div class="section-content">{{references}}</div>
+    {{/if}}
+</body>
+</html>
